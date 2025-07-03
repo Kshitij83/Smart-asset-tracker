@@ -1,0 +1,38 @@
+# Node.js/Next.js (frontend)
+asset-track-ui/node_modules/
+asset-track-ui/.next/
+asset-track-ui/out/
+asset-track-ui/build/
+asset-track-ui/coverage/
+asset-track-ui/.env*
+asset-track-ui/*.tsbuildinfo
+asset-track-ui/*.log
+
+# Java/Spring Boot (backend)
+asset-track-backend/target/
+asset-track-backend/.mvn/
+asset-track-backend/mvnw
+asset-track-backend/mvnw.cmd
+asset-track-backend/.env*
+asset-track-backend/*.log
+asset-track-backend/*.db
+asset-track-backend/*.sqlite
+asset-track-backend/logs/
+asset-track-backend/pids
+asset-track-backend/*.pid
+asset-track-backend/*.seed
+asset-track-backend/*.pid.lock
+
+# General/IDE/OS/Docker
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+.vercel
+docker/.env
+*.pem
+
+# Coverage/Testing
+coverage/

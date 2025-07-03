@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: assettrackr
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assettrackr
+    username: ${DB_USERNAME:assettrackr}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  security:
+    jwt:
+      secret: ${JWT_SECRET:mySecretKey}
+      expiration: 86400000 # 24 hours
+
+server:
+  port: 8080
+
+cors:
+  allowed-origins: http://localhost:3000,http://localhost:3001
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+
+logging:
+  level:
+    com.assettrackr: DEBUG
+    org.springframework.security: DEBUG
