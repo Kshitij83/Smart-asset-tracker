@@ -13,6 +13,33 @@ import { Brain, TrendingUp, Target, AlertTriangle, Play, Download, History } fro
 import { useToast } from "@/hooks/use-toast"
 import type { PredictionResponse } from "@/lib/api"
 
+// Deterministic pseudo-random generator so results are stable per symbol
+const seededRandom = (seed: string) => {
+  let h = 2166136261
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return () => {
+    h = Math.imul(h ^ (h >>> 13), 1274126177)
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295
+  }
+}
+
+const basePriceFor = (symbol: string) => {
+  const prices: Record<string, number> = {
+    AAPL: 175.5,
+    TSLA: 245.8,
+    GOOGL: 158.2,
+    MSFT: 428.5,
+    AMZN: 186.3,
+    NVDA: 128.9,
+    BTC: 52000,
+    ETH: 2800,
+  }
+  return prices[symbol] || 100 + (symbol.length * 37) % 200
+}
+
 export default function PredictionPage() {
   const [selectedStock, setSelectedStock] = useState("")
   const [predictionDays, setPredictionDays] = useState("30")
@@ -22,16 +49,26 @@ export default function PredictionPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
-  // Mock data for demonstration
-  const mockPredictions = {
-    symbol: "AAPL",
-    predictions: Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      predictedPrice: 175 + Math.random() * 20 - 10,
-      confidence: 0.85 + Math.random() * 0.1,
-    })),
-    accuracy: 0.87,
-    model: "LSTM",
+  const buildMockPredictions = (symbol: string, days: number, model: string): PredictionResponse => {
+    const rand = seededRandom(`${symbol}-${days}-${model}`)
+    const basePrice = basePriceFor(symbol)
+    let price = basePrice
+    const direction = rand() > 0.5 ? 1 : -1
+    const predictions = Array.from({ length: days }, (_, i) => {
+      const drift = direction * 0.004 + (rand() - 0.5) * 0.02
+      price = price * (1 + drift)
+      return {
+        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        predictedPrice: Math.round(price * 100) / 100,
+        confidence: 0.85 + rand() * 0.12,
+      }
+    })
+    return {
+      symbol,
+      predictions,
+      accuracy: model === "LSTM" ? 0.87 : model === "ARIMA" ? 0.82 : 0.75,
+      model,
+    }
   }
 
   const handlePredict = async () => {
@@ -47,15 +84,16 @@ export default function PredictionPage() {
     setIsLoading(true)
 
     try {
-      // For demo purposes, use mock data
+      // For demo purposes, use mock data generated deterministically from inputs.
+      // Swap this for the real Spring Boot API when hosted (lib/api.ts).
       setTimeout(() => {
-        setPredictions(mockPredictions)
+        setPredictions(buildMockPredictions(selectedStock, Number.parseInt(predictionDays), selectedModel))
         setIsLoading(false)
         toast({
           title: "Prediction Complete",
-          description: `Generated ${predictionDays}-day price prediction for ${selectedStock}`,
+          description: `Generated ${predictionDays}-day price prediction for ${selectedStock} using ${selectedModel}.`,
         })
-      }, 3000)
+      }, 1500)
 
       // Uncomment for real API integration
       // const request: PredictionRequest = {
@@ -73,6 +111,30 @@ export default function PredictionPage() {
       })
       setIsLoading(false)
     }
+  }
+
+  const handleExport = () => {
+    if (!predictions) return
+    const header = ["Date", "Predicted Price", "Confidence"]
+    const rows = predictions.predictions.map((p) => [
+      p.date,
+      p.predictedPrice.toFixed(2),
+      (p.confidence * 100).toFixed(1) + "%",
+    ])
+    const csv = [header.join(","), ...rows.map((r) => r.join(","))].join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${predictions.symbol}-prediction-${predictions.model}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    toast({
+      title: "Prediction Exported",
+      description: `${predictions.predictions.length} data points exported to CSV.`,
+    })
   }
 
   const popularStocks = [
@@ -244,7 +306,7 @@ export default function PredictionPage() {
                   <TabsTrigger value="metrics">Model Metrics</TabsTrigger>
                 </TabsList>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export
                   </Button>

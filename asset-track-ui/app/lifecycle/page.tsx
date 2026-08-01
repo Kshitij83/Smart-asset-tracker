@@ -26,9 +26,11 @@ const generateLifecycleData = (symbol: string) => {
   const basePrice = symbol === "AAPL" ? 150 : symbol === "TSLA" ? 200 : symbol === "BTC" ? 45000 : 100
   const data = []
   let price = basePrice
+  let seed = 0
+  for (let ch of symbol) seed += ch.charCodeAt(0)
 
   for (let i = 0; i < 365; i++) {
-    const change = (Math.random() - 0.5) * 0.1
+    const change = (Math.sin((i + 1) * 7 + seed) * 0.008 + Math.cos((i + 1) * 13 + seed) * 0.01 + 0.001)
     price = price * (1 + change)
     data.push({
       date: new Date(2024, 0, i + 1).toISOString().split("T")[0],
@@ -65,7 +67,13 @@ export default function LifecyclePage() {
   }, [searchTerm, selectedType, selectedSector])
 
   const selectedAssetData = assets.find((a) => a.symbol === selectedAsset)
-  const lifecycleData = generateLifecycleData(selectedAsset)
+  const fullLifecycleData = useMemo(() => generateLifecycleData(selectedAsset), [selectedAsset])
+
+  // Respect the selected timeframe (1M, 3M, 6M, 1Y, ALL)
+  const timeframeDays: Record<string, number> = { "1M": 30, "3M": 91, "6M": 182, "1Y": 365, ALL: 365 }
+  const sliceDays = timeframeDays[timeframe] || 365
+  const lifecycleData = useMemo(() => fullLifecycleData.slice(-sliceDays), [fullLifecycleData, sliceDays])
+
   const currentData = lifecycleData[lifecycleData.length - 1]
   const initialData = lifecycleData[0]
   const totalReturn = ((currentData.price - initialData.price) / initialData.price) * 100
@@ -90,7 +98,7 @@ export default function LifecyclePage() {
       title: "Total Return",
       value: `${totalReturn >= 0 ? "+" : ""}${totalReturn.toFixed(2)}%`,
       icon: Percent,
-      change: "Since purchase",
+      change: `Since ${timeframe}`,
       changeType: totalReturn >= 0 ? "positive" : "negative",
     },
     {

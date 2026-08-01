@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Bell, User, Settings, LogOut, Menu } from "lucide-react"
+import { Bell, User, Settings, LogOut, Menu, Circle } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Sidebar } from "@/components/layout/sidebar"
 
@@ -24,6 +24,12 @@ export function Header() {
   ])
 
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  })
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -41,14 +47,22 @@ export function Header() {
           </Sheet>
 
           <Link href="/dashboard" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary to-chart-2 rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
               <span className="text-white font-bold text-sm">AT</span>
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              AssetTrackr
-            </span>
+            <span className="hidden sm:block font-bold text-xl gradient-text">AssetTrackr</span>
           </Link>
+
+          <Badge
+            variant="secondary"
+            className="hidden md:inline-flex gap-1.5 items-center text-xs font-medium"
+          >
+            <Circle className="h-2 w-2 fill-green-500 text-green-500 animate-glow" />
+            Markets open
+          </Badge>
         </div>
+
+        <div className="hidden lg:block text-xs text-muted-foreground">{today}</div>
 
         <div className="flex items-center gap-4">
           {/* Notifications */}
