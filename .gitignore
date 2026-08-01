@@ -10,6 +10,8 @@ asset-track-ui/*.log
 
 # Java/Spring Boot (backend)
 asset-track-backend/target/
+asset-track-backend/build/
+asset-track-backend/.gradle/
 asset-track-backend/.mvn/
 asset-track-backend/mvnw
 asset-track-backend/mvnw.cmd

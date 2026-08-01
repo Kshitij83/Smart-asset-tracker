@@ -1,13 +1,13 @@
 spring:
   application:
     name: assettrackr
-  
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/assettrackr
+    url: ${DB_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/assettrackr}}
     username: ${DB_USERNAME:assettrackr}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,21 +16,19 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-  
+
   security:
     jwt:
       secret: ${JWT_SECRET:mySecretKey}
       expiration: 86400000 # 24 hours
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 cors:
-  allowed-origins: http://localhost:3000,http://localhost:3001
-  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-  allowed-headers: "*"
+  allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:3001,https://asset-track-ui.vercel.app}
 
 logging:
   level:
-    com.assettrackr: DEBUG
-    org.springframework.security: DEBUG
+    com.assettrackr: INFO
+    org.springframework.security: INFO
